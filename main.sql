@@ -123,5 +123,13 @@ SELECT over_id,SUM(runs_scored) AS over_runs_scored FROM Batsman_scored WHERE ma
 --5--
 SELECT DISTINCT player_name FROM wicket_taken,player WHERE kind_out = 'bowled' AND player_out = player_id ORDER BY player_name
 
---6--
+--14--
+SELECT venue FROM Match WHERE win_type = 'wickets' GROUP BY venue ORDER BY count(match_id),venue
+
+--15--
+-- We need to select min from this query somehow conventional select min kaam nhi kar rha. ek baar dekh le--
+SELECT player_name from (SELECT runs_bowler.bowler as bowler, runs_given*1000/wickets as average FROM (SELECT bowler,sum(runs_scored) AS runs_given FROM (SELECT match_id,over_id, bowler FROM ball_by_ball GROUP BY over_id,bowler,match_id) AS ball_ball, batsman_scored WHERE ball_ball.over_id = batsman_scored.over_id AND ball_ball.match_id = batsman_scored.match_id GROUP BY bowler) as runs_bowler, (SELECT bowler,count(kind_out) AS wickets FROM (SELECT match_id,over_id, bowler FROM ball_by_ball GROUP BY over_id,bowler,match_id) AS ball_ball, wicket_taken WHERE ball_ball.over_id = wicket_taken.over_id AND ball_ball.match_id = wicket_taken.match_id GROUP BY bowler) as wickets_bowler WHERE runs_bowler.bowler = wickets_bowler.bowler)as relevent, player WHERE player_id = bowler ORDER BY average,player_name
+
+--16--
+SELECT DISTINCT player_name, name from (SELECT player_name,team_id FROM (SELECT player_name,team_id,match_id FROM (SELECT player_id,team_id,match_id FROM player_match WHERE role = 'CaptainKeeper')as captainkeeper,player where captainkeeper.player_id = player.player_id) AS relevent_matches,match WHERE match.match_id = relevent_matches.match_id AND match.match_winner = relevent_matches.team_id)as relevent,team Where relevent.team_id = team.team_id ORDER BY player_name
 
