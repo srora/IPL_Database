@@ -125,3 +125,14 @@ SELECT DISTINCT player_name FROM wicket_taken,player WHERE kind_out = 'bowled' A
 
 --6--
 
+SELECT Match.match_id, name_1 as team_1, name_2 as team_2, winning_team_name, win_margin FROM (SELECT match_id, name as name_1 FROM Match, Team where team_1=team_id AND win_margin>=60) as f1, (SELECT match_id, name as name_2 FROM Match, Team where team_2=team_id AND win_margin>=60) as f2, (SELECT match_id, name as winning_team_name FROM Match, Team where match_winner=team_id AND win_margin>=60) as f3, Match where Match.match_id=f1.match_id AND f2.match_id=f3.Match_id AND f1.match_id=f2.match_id AND f3.match_id=Match.match_id ORDER BY win_margin, match_id;
+
+--7--
+
+SELECT player_name FROM Player WHERE batting_hand='Left-hand bat' AND EXTRACT(YEAR FROM(AGE('2018-02-12', dob))) <30 ORDER BY player_name;
+
+--8-- 
+
+SELECT t1.match_id, t1.a, t2.b as total_runs FROM (SELECT match_id, sum(runs_scored)as a FROM Batsman_scored GROUP BY match_id) as t1,(SELECT match_id, sum(extra_runs) as b FROM Extra_runs GROUP BY match_id) as t2 WHERE t1.match_id=t2.match_id;
+
+
