@@ -133,3 +133,44 @@ SELECT player_name from (SELECT runs_bowler.bowler as bowler, runs_given*1000/wi
 --16--
 SELECT DISTINCT player_name, name from (SELECT player_name,team_id FROM (SELECT player_name,team_id,match_id FROM (SELECT player_id,team_id,match_id FROM player_match WHERE role = 'CaptainKeeper')as captainkeeper,player where captainkeeper.player_id = player.player_id) AS relevent_matches,match WHERE match.match_id = relevent_matches.match_id AND match.match_winner = relevent_matches.team_id)as relevent,team Where relevent.team_id = team.team_id ORDER BY player_name
 
+SELECT Match.match_id, name_1 as team_1, name_2 as team_2, winning_team_name, win_margin FROM (SELECT match_id, name as name_1 FROM Match, Team where team_1=team_id AND win_margin>=60) as f1, (SELECT match_id, name as name_2 FROM Match, Team where team_2=team_id AND win_margin>=60) as f2, (SELECT match_id, name as winning_team_name FROM Match, Team where match_winner=team_id AND win_margin>=60) as f3, Match where Match.match_id=f1.match_id AND f2.match_id=f3.Match_id AND f1.match_id=f2.match_id AND f3.match_id=Match.match_id ORDER BY win_margin, match_id;
+
+--7--
+
+SELECT player_name FROM Player WHERE batting_hand='Left-hand bat' AND EXTRACT(YEAR FROM(AGE('2018-02-12', dob))) <30 ORDER BY player_name;
+
+--8-- 
+
+SELECT t1.match_id, t1.a, t2.b as total_runs FROM (SELECT match_id, sum(runs_scored)as a FROM Batsman_scored GROUP BY match_id) as t1,(SELECT match_id, sum(extra_runs) as b FROM Extra_runs GROUP BY match_id) as t2 WHERE t1.match_id=t2.match_id;
+
+--12--
+Select name, number from team natural inner join (Select team_id, count(man_of_the_match)as number from player_match inner join (Select man_of_the_match, match_id from match )as ab on ab.match_id = player_match.match_id and man_of_the_match = player_id group by team_id) as abc order by name
+
+--13--
+Select venue from match natural inner join (Select match_id, count(extra_type) as num_wides from extra_runs where extra_type = 'wides' group by match_id) as abc group by venue order by sum(num_wides) desc limit 1 
+
+--14--
+SELECT venue FROM Match WHERE win_type = 'wickets' GROUP BY venue ORDER BY count(match_id) desc,venue 
+
+--15--
+-- We need to select min from this query somehow conventional select min kaam nhi kar rha. ek baar dekh le--
+SELECT player_name from (SELECT runs_bowler.bowler as bowler, runs_given*1000/wickets as average FROM (SELECT bowler,sum(runs_scored) AS runs_given FROM (SELECT match_id,over_id, bowler FROM ball_by_ball GROUP BY over_id,bowler,match_id) AS ball_ball, batsman_scored WHERE ball_ball.over_id = batsman_scored.over_id AND ball_ball.match_id = batsman_scored.match_id GROUP BY bowler) as runs_bowler, (SELECT bowler,count(kind_out) AS wickets FROM (SELECT match_id,over_id, bowler FROM ball_by_ball GROUP BY over_id,bowler,match_id) AS ball_ball, wicket_taken WHERE ball_ball.over_id = wicket_taken.over_id AND ball_ball.match_id = wicket_taken.match_id GROUP BY bowler) as wickets_bowler WHERE runs_bowler.bowler = wickets_bowler.bowler)as relevent, player WHERE player_id = bowler ORDER BY average,player_name
+
+--16--
+SELECT  player_name, name from (SELECT player_name,team_id FROM (SELECT player_name,team_id,match_id FROM (SELECT player_id,team_id,match_id FROM player_match WHERE role = 'CaptainKeeper')as captainkeeper,player where captainkeeper.player_id = player.player_id) AS relevent_matches,match WHERE match.match_id = relevent_matches.match_id AND match.match_winner = relevent_matches.team_id)as relevent,team Where relevent.team_id = team.team_id ORDER BY player_name
+
+--17--
+SELECT player_name, total_runs FROM player, (SELECT striker, sum(innings_runs_scored) AS TOTAL_RUNS  FROM  (SELECT striker, match_id, sum(runs_scored) as innings_runs_scored FROM  batsman_scored NATURAL INNER JOIN (SELECT match_id,over_id,innings_no,striker, ball_id from ball_by_ball) as ball_ball GROUP BY striker, match_id ) AS hava GROUP BY striker HAVING max(innings_runs_scored) > 50) as relevant where relevant.striker = player.player_id order by total_runs desc, player_name
+
+--18--
+SELECT player_name from player,(SELECT striker from match natural inner join(SELECT striker, match_id,team_batting, sum(runs_scored) as innings_runs_scored FROM batsman_scored NATURAL INNER JOIN (SELECT match_id,over_id,innings_no,striker,team_batting, ball_id from ball_by_ball) as ball_ball GROUP BY striker, match_id,team_batting) as rel WHERE team_batting != match_winner and innings_runs_scored >= 100)as rele where rele.striker = player.player_id order by player_name asc
+
+--19--
+SELECT match_id, venue from match where (team_1 = 1 or team_2 = 1) and match_winner != 1 order by match_id
+
+--20--
+SELECT player_name from player, (SELECT striker, count(distinct(match_id))as num_matches_played,sum(innings_runs_scored) as season_runs_scored from (SELECT * FROM match WHERE season_id = 5)as abc natural inner join (SELECT striker, match_id,team_batting, sum(runs_scored) as innings_runs_scored FROM batsman_scored NATURAL INNER JOIN (SELECT match_id,over_id,innings_no,striker,team_batting, ball_id from ball_by_ball)  as ball_ball GROUP BY striker, match_id,team_batting) as rel WHERE team_batting != match_winner GROUP BY striker) as rele where rele.striker = player.player_id order by (season_runs_scored*1000/num_matches_played) desc, player_name limit 10
+
+--21--
+SELECT country_name from(SELECT player_name, season_runs_scored,(season_runs_scored/num_matches_played) as aveg, num_matches_played, country_name  from player,(SELECT striker, count(distinct(match_id))as num_matches_played,sum(innings_runs_scored) as season_runs_scored from match as abc natural inner join (SELECT striker, match_id,team_batting, sum(runs_scored) as innings_runs_scored  FROM batsman_scored NATURAL INNER JOIN   (SELECT match_id,over_id,innings_no,striker,team_batting, ball_id from ball_by_ball) as ball_ball GROUP BY striker, match_id,team_batting) as rel WHERE team_batting != match_winner GROUP BY striker) as rele where rele.striker = player.player_id)as kk group by country_name order by sum(aveg)/count(player_name) desc limit 5
+
