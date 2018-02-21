@@ -123,15 +123,7 @@ SELECT over_id,SUM(runs_scored) AS over_runs_scored FROM Batsman_scored WHERE ma
 --5--
 SELECT DISTINCT player_name FROM wicket_taken,player WHERE kind_out = 'bowled' AND player_out = player_id ORDER BY player_name
 
---14--
-SELECT venue FROM Match WHERE win_type = 'wickets' GROUP BY venue ORDER BY count(match_id),venue
-
---15--
--- We need to select min from this query somehow conventional select min kaam nhi kar rha. ek baar dekh le--
-SELECT player_name from (SELECT runs_bowler.bowler as bowler, runs_given*1000/wickets as average FROM (SELECT bowler,sum(runs_scored) AS runs_given FROM (SELECT match_id,over_id, bowler FROM ball_by_ball GROUP BY over_id,bowler,match_id) AS ball_ball, batsman_scored WHERE ball_ball.over_id = batsman_scored.over_id AND ball_ball.match_id = batsman_scored.match_id GROUP BY bowler) as runs_bowler, (SELECT bowler,count(kind_out) AS wickets FROM (SELECT match_id,over_id, bowler FROM ball_by_ball GROUP BY over_id,bowler,match_id) AS ball_ball, wicket_taken WHERE ball_ball.over_id = wicket_taken.over_id AND ball_ball.match_id = wicket_taken.match_id GROUP BY bowler) as wickets_bowler WHERE runs_bowler.bowler = wickets_bowler.bowler)as relevent, player WHERE player_id = bowler ORDER BY average,player_name
-
---16--
-SELECT DISTINCT player_name, name from (SELECT player_name,team_id FROM (SELECT player_name,team_id,match_id FROM (SELECT player_id,team_id,match_id FROM player_match WHERE role = 'CaptainKeeper')as captainkeeper,player where captainkeeper.player_id = player.player_id) AS relevent_matches,match WHERE match.match_id = relevent_matches.match_id AND match.match_winner = relevent_matches.team_id)as relevent,team Where relevent.team_id = team.team_id ORDER BY player_name
+--6--
 
 SELECT Match.match_id, name_1 as team_1, name_2 as team_2, winning_team_name, win_margin FROM (SELECT match_id, name as name_1 FROM Match, Team where team_1=team_id AND win_margin>=60) as f1, (SELECT match_id, name as name_2 FROM Match, Team where team_2=team_id AND win_margin>=60) as f2, (SELECT match_id, name as winning_team_name FROM Match, Team where match_winner=team_id AND win_margin>=60) as f3, Match where Match.match_id=f1.match_id AND f2.match_id=f3.Match_id AND f1.match_id=f2.match_id AND f3.match_id=Match.match_id ORDER BY win_margin, match_id;
 
@@ -173,4 +165,3 @@ SELECT player_name from player, (SELECT striker, count(distinct(match_id))as num
 
 --21--
 SELECT country_name from(SELECT player_name, season_runs_scored,(season_runs_scored/num_matches_played) as aveg, num_matches_played, country_name  from player,(SELECT striker, count(distinct(match_id))as num_matches_played,sum(innings_runs_scored) as season_runs_scored from match as abc natural inner join (SELECT striker, match_id,team_batting, sum(runs_scored) as innings_runs_scored  FROM batsman_scored NATURAL INNER JOIN   (SELECT match_id,over_id,innings_no,striker,team_batting, ball_id from ball_by_ball) as ball_ball GROUP BY striker, match_id,team_batting) as rel WHERE team_batting != match_winner GROUP BY striker) as rele where rele.striker = player.player_id)as kk group by country_name order by sum(aveg)/count(player_name) desc limit 5
-
