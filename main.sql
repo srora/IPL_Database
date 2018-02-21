@@ -135,6 +135,11 @@ SELECT player_name FROM Player WHERE batting_hand='Left-hand bat' AND EXTRACT(YE
 
 SELECT t1.match_id, t1.a, t2.b as total_runs FROM (SELECT match_id, sum(runs_scored)as a FROM Batsman_scored GROUP BY match_id) as t1,(SELECT match_id, sum(extra_runs) as b FROM Extra_runs GROUP BY match_id) as t2 WHERE t1.match_id=t2.match_id;
 
+--12--
+Select name, number from team natural inner join (Select team_id, count(man_of_the_match)as number from player_match inner join (Select man_of_the_match, match_id from match )as ab on ab.match_id = player_match.match_id and man_of_the_match = player_id group by team_id) as abc order by name
+
+--13--
+Select venue from match natural inner join (Select match_id, count(extra_type) as num_wides from extra_runs where extra_type = 'wides' group by match_id) as abc group by venue order by sum(num_wides) desc limit 1 
 
 --14--
 SELECT venue FROM Match WHERE win_type = 'wickets' GROUP BY venue ORDER BY count(match_id) desc,venue 
