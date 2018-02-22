@@ -135,7 +135,26 @@ SELECT player_name FROM Player WHERE batting_hand='Left-hand bat' AND EXTRACT(YE
 
 SELECT t1.match_id, t1.a, t2.b as total_runs FROM (SELECT match_id, sum(runs_scored)as a FROM Batsman_scored GROUP BY match_id) as t1,(SELECT match_id, sum(extra_runs) as b FROM Extra_runs GROUP BY match_id) as t2 WHERE t1.match_id=t2.match_id;
 
+--9--
+
+SELECT t.match_id, maximum_runs, player_name FROM 
+(SELECT temp.match_id, over_id, innings_no, ball_id, maximum_runs FROM 
+(SELECT match_id, max(runs_scored) as maximum_runs FROM Batsman_scored GROUP BY match_id)
+as temp, Batsman_scored as bs where temp.match_id=bs.match_id AND maximum_runs=bs.runs_scored
+) as t, Ball_by_ball as b, Player where t.match_id=b.match_id AND t.over_id=b.over_id AND t.innings_no=b.innings_no AND t.ball_id=b.ball_id AND b.bowler=player_id
+GROUP BY t.over_id, t.match_id, t.innings_no, maximum_runs, player_name
+ORDER BY t.match_id, t.over_id;
+
+--10--
+
+SELECT player_name, run_out_count FROM (SELECT player_name, count(kind_out) as run_out_count FROM Wicket_taken, Player where kind_out='run out' AND player_out=player_id GROUP BY player_name) as foo ORDER BY run_out_count DESC, player_name;
+
+--11--
+
+SELECT kind_out as out_type, count(kind_out) as number FROM Wicket_taken GROUP BY kind_out ORDER BY number DESC, out_type;
+
 --12--
+
 Select name, number from team natural inner join (Select team_id, count(man_of_the_match)as number from player_match inner join (Select man_of_the_match, match_id from match )as ab on ab.match_id = player_match.match_id and man_of_the_match = player_id group by team_id) as abc order by name
 
 --13--
