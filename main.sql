@@ -118,7 +118,7 @@ SELECT player_name, age FROM (SELECT player_name, dob, EXTRACT(YEAR FROM(AGE('20
 SELECT match_id, toss_winner FROM Match where toss_decision='bat' ORDER BY match_id;
 
 --4--
-SELECT over_id,SUM(runs_scored) AS over_runs_scored FROM Batsman_scored WHERE match_id = 335987 GROUP BY over_id HAVING SUM(runs_scored)<=7 ORDER BY over_runs_scored DESC,over_id
+SELECT over_id,SUM(runs_scored) AS over_runs_scored FROM Batsman_scored GROUP BY match_id,over_id,innings_no HAVING match_id = 335987 and SUM(runs_scored)<=7 ORDER BY over_runs_scored DESC,over_id
 
 --5--
 SELECT DISTINCT player_name FROM wicket_taken,player WHERE kind_out = 'bowled' AND player_out = player_id ORDER BY player_name
