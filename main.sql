@@ -118,7 +118,7 @@ SELECT player_name, age FROM (SELECT player_name, dob, EXTRACT(YEAR FROM(AGE('20
 SELECT match_id, toss_winner FROM Match where toss_decision='bat' ORDER BY match_id;
 
 --4--
-SELECT over_id,SUM(runs_scored)+ COALSCE(SUM(extra_runs),0) AS over_runs_scored
+SELECT over_id,SUM(runs_scored)+ COALESCE(SUM(extra_runs),0) AS over_runs_scored
 FROM Batsman_scored NATURAL FULL OUTER JOIN extra_runs
 WHERE match_id = 335987 
 GROUP BY over_id,innings_no 
