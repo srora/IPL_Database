@@ -164,6 +164,7 @@ FROM(
 		FROM ball_by_ball 
 		GROUP BY match_id, innings_no, over_id,bowler) as abc NATURAL INNER JOIN player
 	)as too 
+ORDER BY match_id,over_id
 
 --10--
 
