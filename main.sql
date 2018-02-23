@@ -239,7 +239,7 @@ FROM(
 
 
 --16--
-SELECT  player_name, name from (SELECT player_name,team_id FROM (SELECT player_name,team_id,match_id FROM (SELECT player_id,team_id,match_id FROM player_match WHERE role = 'CaptainKeeper')as captainkeeper,player where captainkeeper.player_id = player.player_id) AS relevent_matches,match WHERE match.match_id = relevent_matches.match_id AND match.match_winner = relevent_matches.team_id)as relevent,team Where relevent.team_id = team.team_id ORDER BY player_name
+SELECT  player_name, name from (SELECT player_name,team_id FROM (SELECT player_name,team_id,match_id FROM (SELECT player_id,team_id,match_id FROM player_match WHERE role = 'CaptainKeeper')as captainkeeper,player where captainkeeper.player_id = player.player_id) AS relevent_matches,match WHERE match.match_id = relevent_matches.match_id AND match.match_winner = relevent_matches.team_id)as relevent,team Where relevent.team_id = team.team_id ORDER BY player_name,name
 
 --17--
 SELECT player_name, total_runs FROM player, (SELECT striker, sum(innings_runs_scored) AS TOTAL_RUNS  FROM  (SELECT striker, match_id, sum(runs_scored) as innings_runs_scored FROM  batsman_scored NATURAL INNER JOIN (SELECT match_id,over_id,innings_no,striker, ball_id from ball_by_ball) as ball_ball GROUP BY striker, match_id ) AS hava GROUP BY striker HAVING max(innings_runs_scored) > 50) as relevant where relevant.striker = player.player_id order by total_runs desc, player_name
