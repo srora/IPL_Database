@@ -133,7 +133,7 @@ SELECT player_name FROM Player WHERE batting_hand='Left-hand bat' AND EXTRACT(YE
 
 --8-- 
 
-SELECT t1.match_id, t1.a, t2.b as total_runs FROM (SELECT match_id, sum(runs_scored)as a FROM Batsman_scored GROUP BY match_id) as t1,(SELECT match_id, sum(extra_runs) as b FROM Extra_runs GROUP BY match_id) as t2 WHERE t1.match_id=t2.match_id;
+SELECT t1.match_id, t1.a+t2.b as total_runs FROM (SELECT match_id, sum(runs_scored)as a FROM Batsman_scored GROUP BY match_id) as t1,(SELECT match_id, sum(extra_runs) as b FROM Extra_runs GROUP BY match_id) as t2 WHERE t1.match_id=t2.match_id ORDER BY t1.match_id;
 
 --9--
 
