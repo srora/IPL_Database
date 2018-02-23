@@ -186,45 +186,56 @@ SELECT venue FROM Match WHERE (match_winner = toss_winner and toss_decision = 'f
 --primary key includes innings and ball also--
 --if you have joined without them its a problem--
 --15--
-SELECT player_name 
+SELECT player_name
 FROM
-(SELECT player_name, average from 
-(
-SELECT runs_bowler.bowler as bowler, runs_given*1000/wickets as average FROM 
-(SELECT bowler,sum(runs_scored) AS runs_given FROM 
-(SELECT match_id,over_id, bowler, innings_no, ball_id 
-FROM ball_by_ball 
-GROUP BY over_id,bowler,match_id, innings_no, ball_id) AS ball_ball, batsman_scored 
-WHERE ball_ball.over_id = batsman_scored.over_id AND ball_ball.match_id = batsman_scored.match_id AND ball_ball.ball_id = batsman_scored.ball_id AND ball_ball.innings_no = batsman_scored.innings_no
-GROUP BY bowler) as runs_bowler, 
-(SELECT bowler,count(kind_out) AS wickets FROM 
-(SELECT match_id,over_id, innings_no, ball_id , bowler FROM ball_by_ball 
-GROUP BY over_id,bowler,match_id, innings_no, ball_id ) AS ball_ball, wicket_taken 
-WHERE ball_ball.over_id = wicket_taken.over_id AND ball_ball.match_id = wicket_taken.match_id AND ball_ball.ball_id = wicket_taken.ball_id AND ball_ball.innings_no = wicket_taken.innings_no
-GROUP BY bowler) as wickets_bowler 
-WHERE runs_bowler.bowler = wickets_bowler.bowler)as relevent, player 
+	(SELECT player_name, average 
+	 from (
+		SELECT runs_bowler.bowler as bowler, round(runs_given/wickets,3) as average 
+		FROM (
+			SELECT bowler,sum(runs_scored)+coalesce(sum(extra_runs),0) AS runs_given 
+			FROM (
+				SELECT match_id,over_id, bowler, innings_no, ball_id 
+				FROM ball_by_ball 
+				GROUP BY over_id,bowler,match_id, innings_no, ball_id
+			) AS ball_ball NATURAL INNER JOIN (batsman_scored NATURAL FULL OUTER JOIN extra_runs)
+			GROUP BY bowler
+		)as runs_bowler NATURAL INNER JOIN 
+			(SELECT bowler,count(kind_out) AS wickets 
+			FROM 
+				(SELECT match_id,over_id, innings_no, ball_id , bowler FROM ball_by_ball 
+				GROUP BY over_id,bowler,match_id, innings_no, ball_id )
+				AS ball_ball NATURAL INNER JOIN wicket_taken 
+				GROUP BY bowler)
+			as wickets_bowler
+	 )as relevent, player 
 WHERE player_id = bowler 
-ORDER BY average,player_name) AS find_names_with_min
+ORDER BY average,player_name) as foo
 WHERE average = 
-(SELECT min(average) FROM
-(SELECT player_name, average from 
-(
-SELECT runs_bowler.bowler as bowler, runs_given*1000/wickets as average FROM 
-(SELECT bowler,sum(runs_scored) AS runs_given FROM 
-(SELECT match_id,over_id, bowler, innings_no, ball_id 
-FROM ball_by_ball 
-GROUP BY over_id,bowler,match_id, innings_no, ball_id) AS ball_ball, batsman_scored 
-WHERE ball_ball.over_id = batsman_scored.over_id AND ball_ball.match_id = batsman_scored.match_id AND ball_ball.ball_id = batsman_scored.ball_id AND ball_ball.innings_no = batsman_scored.innings_no
-GROUP BY bowler) as runs_bowler, 
-(SELECT bowler,count(kind_out) AS wickets FROM 
-(SELECT match_id,over_id, innings_no, ball_id , bowler FROM ball_by_ball 
-GROUP BY over_id,bowler,match_id, innings_no, ball_id ) AS ball_ball, wicket_taken 
-WHERE ball_ball.over_id = wicket_taken.over_id AND ball_ball.match_id = wicket_taken.match_id AND ball_ball.ball_id = wicket_taken.ball_id AND ball_ball.innings_no = wicket_taken.innings_no
-GROUP BY bowler) as wickets_bowler 
-WHERE runs_bowler.bowler = wickets_bowler.bowler)as relevent, player 
-WHERE player_id = bowler 
-ORDER BY average,player_name) as find_min)
-ORDER BY player_name;
+(SELECT min(average) 
+FROM(
+	SELECT player_name, average 
+	 from (
+		SELECT runs_bowler.bowler as bowler, round(runs_given/wickets,3) as average 
+		FROM (
+			SELECT bowler,sum(runs_scored)+coalesce(sum(extra_runs),0) AS runs_given 
+			FROM (
+				SELECT match_id,over_id, bowler, innings_no, ball_id 
+				FROM ball_by_ball 
+				GROUP BY over_id,bowler,match_id, innings_no, ball_id
+			) AS ball_ball NATURAL INNER JOIN (batsman_scored NATURAL FULL OUTER JOIN extra_runs)
+			GROUP BY bowler
+		)as runs_bowler NATURAL INNER JOIN 
+			(SELECT bowler,count(kind_out) AS wickets 
+			FROM 
+				(SELECT match_id,over_id, innings_no, ball_id , bowler FROM ball_by_ball 
+				GROUP BY over_id,bowler,match_id, innings_no, ball_id )
+				AS ball_ball NATURAL INNER JOIN wicket_taken 
+				GROUP BY bowler)
+			as wickets_bowler
+	 )as relevent)as mini)
+
+
+
 
 --16--
 SELECT  player_name, name from (SELECT player_name,team_id FROM (SELECT player_name,team_id,match_id FROM (SELECT player_id,team_id,match_id FROM player_match WHERE role = 'CaptainKeeper')as captainkeeper,player where captainkeeper.player_id = player.player_id) AS relevent_matches,match WHERE match.match_id = relevent_matches.match_id AND match.match_winner = relevent_matches.team_id)as relevent,team Where relevent.team_id = team.team_id ORDER BY player_name
