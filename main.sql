@@ -141,13 +141,29 @@ SELECT t1.match_id, t1.a+t2.b as total_runs FROM (SELECT match_id, sum(runs_scor
 
 --9--
 
-SELECT t.match_id, maximum_runs, player_name FROM 
-(SELECT temp.match_id, over_id, innings_no, ball_id, maximum_runs FROM 
-(SELECT match_id, max(runs_scored) as maximum_runs FROM Batsman_scored GROUP BY match_id)
-as temp, Batsman_scored as bs where temp.match_id=bs.match_id AND maximum_runs=bs.runs_scored
-) as t, Ball_by_ball as b, Player where t.match_id=b.match_id AND t.over_id=b.over_id AND t.innings_no=b.innings_no AND t.ball_id=b.ball_id AND b.bowler=player_id
-GROUP BY t.over_id, t.match_id, t.innings_no, maximum_runs, player_name
-ORDER BY t.match_id, t.over_id;
+SELECT match_id, runs_scored, player_name
+FROM(
+	SELECT * FROM(
+		SELECT match_id, max(runs_scored) as runs_scored
+		FROM(
+			SELECT match_id,innings_no,over_id,SUM(runs_scored)+ COALESCE(SUM(extra_runs),0) AS runs_scored
+			FROM Batsman_scored NATURAL FULL OUTER JOIN extra_runs
+			GROUP BY match_id,over_id,innings_no
+			)as foo
+		GROUP BY match_id
+	)as abc
+	NATURAL INNER JOIN(
+		SELECT match_id,innings_no,over_id,SUM(runs_scored)+ COALESCE(SUM(extra_runs),0) AS runs_scored
+		FROM Batsman_scored NATURAL FULL OUTER JOIN extra_runs
+		GROUP BY match_id,over_id,innings_no
+		)as foo
+)as foo NATURAL INNER JOIN (
+	SELECT match_id, innings_no, over_id, player_name
+	FROM(
+		SELECT match_id, innings_no, over_id, bowler as player_id 
+		FROM ball_by_ball 
+		GROUP BY match_id, innings_no, over_id,bowler) as abc NATURAL INNER JOIN player
+	)as too 
 
 --10--
 
