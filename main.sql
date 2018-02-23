@@ -219,7 +219,21 @@ SELECT player_name from player,(SELECT striker from match natural inner join(SEL
 SELECT match_id, venue from match where (team_1 = 1 or team_2 = 1) and match_winner != 1 order by match_id
 
 --20--
-SELECT player_name from player, (SELECT striker, count(distinct(match_id))as num_matches_played,sum(innings_runs_scored) as season_runs_scored from (SELECT * FROM match WHERE season_id = 5)as abc natural inner join (SELECT striker, match_id,team_batting, sum(runs_scored) as innings_runs_scored FROM batsman_scored NATURAL INNER JOIN (SELECT match_id,over_id,innings_no,striker,team_batting, ball_id from ball_by_ball)  as ball_ball GROUP BY striker, match_id,team_batting) as rel WHERE team_batting != match_winner GROUP BY striker) as rele where rele.striker = player.player_id order by (season_runs_scored*1000/num_matches_played) desc, player_name limit 10
+SELECT player_name
+FROM(SELECT player_id, count(distinct(match_id)) as matches_played, sum(runs_scored) as season_runs_scored
+	FROM(
+		SElECT match_id,over_id,innings_no,ball_id,COALESCE(runs_scored,0) AS runs_scored,striker as player_id
+			FROM ball_by_ball
+			NATURAL INNER JOIN batsman_scored
+			NATURAL INNER JOIN match 
+			WHERE match.season_id = 5
+		)as foo
+	GROUP BY player_id
+	ORDER BY season_runs_scored DESC
+	)as foo
+NATURAL INNER JOIN player
+ORDER BY season_runs_scored/matches_played DESC
+LIMIT 10
 
 --21--
 SELECT country_name from(SELECT player_name, season_runs_scored,(season_runs_scored/num_matches_played) as aveg, num_matches_played, country_name  from player,(SELECT striker, count(distinct(match_id))as num_matches_played,sum(innings_runs_scored) as season_runs_scored from match as abc natural inner join (SELECT striker, match_id,team_batting, sum(runs_scored) as innings_runs_scored  FROM batsman_scored NATURAL INNER JOIN   (SELECT match_id,over_id,innings_no,striker,team_batting, ball_id from ball_by_ball) as ball_ball GROUP BY striker, match_id,team_batting) as rel WHERE team_batting != match_winner GROUP BY striker) as rele where rele.striker = player.player_id)as kk group by country_name order by sum(aveg)/count(player_name) desc limit 5
