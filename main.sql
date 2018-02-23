@@ -223,36 +223,67 @@ SELECT player_name from player,(SELECT striker from match natural inner join(SEL
 SELECT match_id, venue from match where (team_1 = 1 or team_2 = 1) and match_winner != 1 order by match_id
 
 --20--
-SELECT player_name
-FROM(SELECT player_id, count(distinct(match_id)) as matches_played, sum(runs_scored) as season_runs_scored
+SELECT player_name 
+FROM(
+	SELECT player_id,count(distinct(match_id)) AS matches, SUM(runs) AS runs
 	FROM(
-		SElECT match_id,over_id,innings_no,ball_id,COALESCE(runs_scored,0) AS runs_scored,striker as player_id
+		SELECT player_id, match_id ,SUM(runs) AS runs
+		FROM (
+			SElECT match_id,over_id,innings_no,ball_id,COALESCE(runs_scored,0) AS runs,striker as player_id
 			FROM ball_by_ball
 			NATURAL INNER JOIN batsman_scored
 			NATURAL INNER JOIN match 
 			WHERE match.season_id = 5
-		)as foo
+		) AS foo
+		GROUP BY player_id,match_id
+	) as foo
 	GROUP BY player_id
-	)as foo
+)as foo
 NATURAL INNER JOIN player
-ORDER BY season_runs_scored/matches_played DESC
+ORDER BY ROUND(runs/matches,3) DESC, player_name
 LIMIT 10
 
 --21--
-SELECT country_name
-FROM
-(
-	SELECT player_name, country_name,matches_played,runs,ROUND(runs/matches_played,3) as average 
-	FROM(SELECT player_id, count(distinct(match_id)) as matches_played, ROUND(sum(runs_scored),0) as runs
+SELECT country_name 
+from(
+	SELECT DISTINCT country_average 
+	from(
+		SELECT country_name,ROUND(SUM(average)/COUNT(player_name),3) as country_average
 		FROM(
-			SElECT match_id,over_id,innings_no,ball_id,COALESCE(runs_scored,0) AS runs_scored,striker as player_id
-				FROM ball_by_ball
-				NATURAL INNER JOIN batsman_scored
-				NATURAL INNER JOIN match 
+			SELECT player_name, country_name,matches_played,runs,ROUND(runs/matches_played,3) as average 
+			FROM(
+				SELECT player_id, count(distinct(match_id)) as matches_played, ROUND(sum(runs_scored),0) as runs
+				FROM(
+					SElECT match_id,over_id,innings_no,ball_id,COALESCE(runs_scored,0) AS runs_scored,striker as player_id
+					FROM ball_by_ball
+					NATURAL INNER JOIN batsman_scored
+					NATURAL INNER JOIN match 
+				)as foo
+			GROUP BY player_id
 			)as foo
-		GROUP BY player_id
-		)as foo
-	NATURAL INNER JOIN player
-) as foo
-GROUP BY country_name
-ORDER BY ROUND(SUM(average)/COUNT(player_name),3) DESC
+			NATURAL INNER JOIN player
+		) as foo
+	GROUP BY country_name
+	) as foo
+	ORDER BY country_average DESC
+	LIMIT 5
+) as foo NATURAL LEFT JOIN (SELECT country_name, country_average 
+	from(
+		SELECT country_name,ROUND(SUM(average)/COUNT(player_name),3) as country_average
+		FROM(
+			SELECT player_name, country_name,matches_played,runs,ROUND(runs/matches_played,3) as average 
+			FROM(
+				SELECT player_id, count(distinct(match_id)) as matches_played, ROUND(sum(runs_scored),0) as runs
+				FROM(
+					SElECT match_id,over_id,innings_no,ball_id,COALESCE(runs_scored,0) AS runs_scored,striker as player_id
+					FROM ball_by_ball
+					NATURAL INNER JOIN batsman_scored
+					NATURAL INNER JOIN match 
+				)as foo
+			GROUP BY player_id
+			)as foo
+			NATURAL INNER JOIN player
+		) as foo
+	GROUP BY country_name
+	ORDER BY ROUND(SUM(average)/COUNT(player_name),3) DESC
+	) as foo)as abc
