@@ -181,7 +181,7 @@ Select name, number from team natural inner join (Select team_id, count(man_of_t
 Select venue from match natural inner join (Select match_id, count(extra_type) as num_wides from extra_runs where extra_type = 'wides' group by match_id) as abc group by venue order by sum(num_wides) desc limit 1 
 
 --14--
-SELECT venue FROM Match WHERE win_type = 'wickets' GROUP BY venue ORDER BY count(match_id) desc,venue 
+SELECT venue,count(match_id) FROM Match WHERE (match_winner = toss_winner and toss_decision = 'field') or (match_winner != toss_winner and toss_decision = 'bat')GROUP BY venue ORDER BY count(match_id) desc,venue 
 
 --primary key includes innings and ball also--
 --if you have joined without them its a problem--
