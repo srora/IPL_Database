@@ -168,7 +168,7 @@ ORDER BY match_id,over_id
 
 --10--
 
-SELECT player_name, run_out_count FROM (SELECT player_name, count(kind_out) as run_out_count FROM Wicket_taken, Player where kind_out='run out' AND player_out=player_id GROUP BY player_name) as foo ORDER BY run_out_count DESC, player_name;
+SELECT player_name, run_out_count FROM (SELECT player_name, count(kind_out) as run_out_count FROM (SELECT * FROM Wicket_taken WHERE kind_out='run out')as W FULL OUTER JOIN Player ON  player_out=player_id GROUP BY player_name) as foo ORDER BY run_out_count DESC, player_name
 
 --11--
 
